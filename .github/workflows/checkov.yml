@@ -4,17 +4,15 @@ name: checkov
 on:
   workflow_call:
 
-permissions:
-  contents: read
-  actions: read
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "scan"
   scan:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so follow-up steps can access it

@@ -1,11 +1,6 @@
 ---
 name: "Default Workflow"
 
-permissions:
-  contents: read
-  checks: read
-  statuses: read
-
 on:
   workflow_call:
     inputs:
@@ -25,6 +20,9 @@ jobs:
     if: inputs.merge-checks == true
     runs-on: ubuntu-latest
     # Restrict permissions of the GITHUB_TOKEN.
+    permissions:
+      checks: read
+      statuses: read
     # Docs: https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
     steps:
       - name: Merge Gatekeeper
