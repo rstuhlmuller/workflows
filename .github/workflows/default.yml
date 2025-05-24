@@ -1,4 +1,3 @@
----
 name: "Default Workflow"
 
 on:
@@ -29,7 +28,7 @@ jobs:
         uses: upsidr/merge-gatekeeper@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ignored: "default / merge-checks"
+          ignored: "check / merge-checks"
           timeout: 120
           interval: 5
   checov:
