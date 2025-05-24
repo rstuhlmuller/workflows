@@ -1,0 +1,38 @@
+---
+name: "Default Workflow"
+
+permissions:
+on:
+  workflow_call:
+    inputs:
+      merge-checks:
+        required: false
+        type: boolean
+        default: true
+      checkov:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  # This step ensures all declared jobs in all repository workflows are completed successfully.
+  # So this will easy the repositories branches protections management.
+  merge-checks:
+    if: inputs.merge-checks == true
+    runs-on: ubuntu-latest
+    # Restrict permissions of the GITHUB_TOKEN.
+    # Docs: https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+    permissions:
+      checks: read
+      statuses: read
+    steps:
+      - name: Merge Gatekeeper
+        uses: upsidr/merge-gatekeeper@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ignored: "default / merge-checks"
+          timeout: 120
+          interval: 5
+  checov:
+    if: inputs.checkov == true
+    uses: ./.github/workflows/checkov.yml
