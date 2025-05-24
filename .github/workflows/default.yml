@@ -1,7 +1,8 @@
 ---
 name: "Default Workflow"
 
-permissions: none
+permissions: {}
+
 on:
   workflow_call:
     inputs:
