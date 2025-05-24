@@ -1,11 +1,8 @@
 ---
 name: "Default workflow for workflow local checks"
 
-permissions: {}
-
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
     branches:
       - main
 
