@@ -14,4 +14,4 @@ on:
 
 jobs:
   check:
-    uses: rstuhlmuller/workflows/.github/workflows/default.yml@main
+    uses: ./.github/workflows/default.yml
