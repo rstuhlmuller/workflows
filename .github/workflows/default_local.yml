@@ -1,6 +1,8 @@
 ---
 name: "Default workflow for workflow local checks"
 
+permissions: none
+
 on:
   pull_request:
     branches:
