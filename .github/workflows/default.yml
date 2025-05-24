@@ -1,8 +1,6 @@
 ---
 name: "Default Workflow"
 
-permissions: {}
-
 on:
   workflow_call:
     inputs:
