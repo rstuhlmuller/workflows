@@ -3,6 +3,7 @@ name: "Default Workflow"
 permissions:
   checks: read
   statuses: read
+  contents: read # for actions/checkout to fetch code
 
 on:
   workflow_call:
