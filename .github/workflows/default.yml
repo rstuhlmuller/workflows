@@ -1,5 +1,9 @@
 name: "Default Workflow"
 
+permissions:
+  checks: read
+  statuses: read
+
 on:
   workflow_call:
     inputs:
