@@ -36,6 +36,6 @@ jobs:
           ignored: "check / merge-checks"
           timeout: 120
           interval: 5
-  checov:
+  checkov:
     if: inputs.checkov == true
     uses: ./.github/workflows/checkov.yml
