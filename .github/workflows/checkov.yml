@@ -19,10 +19,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so follow-up steps can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@v12
+        uses: bridgecrewio/checkov-action@85a3d1ecb1fd872629962e62ce9a2271519750a5 # v12
         with:
           # This will add both a CLI output to the console and create a results.sarif file
           quiet: true
