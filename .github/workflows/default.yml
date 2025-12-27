@@ -16,6 +16,14 @@ on:
         required: false
         type: boolean
         default: true
+      merge-checks-timeout:
+        required: false
+        type: number
+        default: 120
+      merge-checks-interval:
+        required: false
+        type: number
+        default: 5
 
 jobs:
   # This step ensures all declared jobs in all repository workflows are completed successfully.
@@ -34,8 +42,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ignored: "check / merge-checks"
-          timeout: 120
-          interval: 5
+          timeout: ${{ inputs.merge-checks-timeout }}
+          interval: ${{ inputs.merge-checks-interval }}
   checkov:
     if: inputs.checkov == true
     uses: ./.github/workflows/checkov.yml
