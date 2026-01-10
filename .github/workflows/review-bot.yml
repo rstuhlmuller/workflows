@@ -1,12 +1,7 @@
 name: PR Agent
 
 on:
-  workflow_call:
-    inputs:
-      model:
-        required: false
-        type: string
-        default: "gpt-3.5-turbo"
+  pull_request:
 
 permissions:
   issues: write

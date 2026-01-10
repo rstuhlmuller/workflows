@@ -6,30 +6,12 @@ permissions:
   contents: read # for actions/checkout to fetch code
 
 on:
-  workflow_call:
-    inputs:
-      merge-checks:
-        required: false
-        type: boolean
-        default: true
-      checkov:
-        required: false
-        type: boolean
-        default: true
-      merge-checks-timeout:
-        required: false
-        type: number
-        default: 120
-      merge-checks-interval:
-        required: false
-        type: number
-        default: 5
+  pull_request:
 
 jobs:
   # This step ensures all declared jobs in all repository workflows are completed successfully.
   # So this will easy the repositories branches protections management.
   merge-checks:
-    if: inputs.merge-checks == true
     runs-on: ubuntu-latest
     # Restrict permissions of the GITHUB_TOKEN.
     permissions:
@@ -42,8 +24,21 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ignored: "check / merge-checks"
-          timeout: ${{ inputs.merge-checks-timeout }}
-          interval: ${{ inputs.merge-checks-interval }}
+          timeout: 120
+          interval: 5
   checkov:
-    if: inputs.checkov == true
-    uses: ./.github/workflows/checkov.yml
+    permissions:
+      contents: read # for actions/checkout to fetch code
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so follow-up steps can access it
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Checkov GitHub Action
+        uses: bridgecrewio/checkov-action@8f61ce5b8a3afb4ca94d236b75201878ded6d2cd # v12
+        with:
+          # This will add both a CLI output to the console and create a results.sarif file
+          quiet: true
