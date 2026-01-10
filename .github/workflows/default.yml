@@ -23,12 +23,13 @@ jobs:
         uses: upsidr/merge-gatekeeper@09af7a82c1666d0e64d2bd8c01797a0bcfd3bb5d # v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ignored: "check / merge-checks"
+          ignored: "merge-checks"
           timeout: 120
           interval: 5
   checkov:
     permissions:
       contents: read # for actions/checkout to fetch code
+      security-events: write
 
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -42,3 +43,10 @@ jobs:
         with:
           # This will add both a CLI output to the console and create a results.sarif file
           quiet: true
+          output_format: cli,sarif
+          output_file_path: results.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
