@@ -9,6 +9,9 @@ jobs:
   rebase:
     name: Rebase
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     if: >-
       github.event.issue.pull_request != '' &&
       (
