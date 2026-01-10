@@ -29,8 +29,8 @@ jobs:
         id: pragent
         uses: qodo-ai/pr-agent@v0.31
         env:
-          OPENAI__API_BASE: https://litellm.stinkyboi.com/v1
-          OPENAI__KEY: ${{ secrets.LITELLM_API_KEY }}
+          OPENAI.API_BASE: https://litellm.stinkyboi.com/v1
+          OPENAI_KEY: ${{ secrets.LITELLM_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: ${{ env.PR_AGENT_MODEL }}
           config.custom_model_max_tokens: 200000
