@@ -1,12 +1,7 @@
 name: PR Agent
 
 on:
-  workflow_call:
-    inputs:
-      model:
-        required: false
-        type: string
-        default: "gpt-3.5-turbo"
+  pull_request:
 
 permissions:
   issues: write
@@ -17,6 +12,8 @@ jobs:
   pr_agent_job:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
+    env:
+      PR_AGENT_MODEL: gpt-3.5-turbo
     permissions:
       issues: write
       pull-requests: write
@@ -30,10 +27,10 @@ jobs:
           statedir: /tmp/tailscale-state/
       - name: PR Agent action step
         id: pragent
-        uses: qodo-ai/pr-agent@main
+        uses: qodo-ai/pr-agent@v0.31
         env:
           OPENAI__API_BASE: https://litellm.stinkyboi.com/v1
           OPENAI__KEY: ${{ secrets.LITELLM_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          config.model: ${{ inputs.model }}
+          config.model: ${{ env.PR_AGENT_MODEL }}
           config.custom_model_max_tokens: 200000
