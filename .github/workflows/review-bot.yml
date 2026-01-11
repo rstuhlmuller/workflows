@@ -25,12 +25,16 @@ jobs:
           authkey: ${{ secrets.TS_AUTH_KEY }}
           tags: tag:ci
           statedir: /tmp/tailscale-state/
-      - name: PR Agent action step
-        id: pragent
-        uses: qodo-ai/pr-agent@d36ad319f7fb0049205017405a71275c41599587 # v0.31
+
+      - name: Review Bot
+        uses: Stuhlmuller/ai-pr-reviewer@main
         env:
-          OPENAI.API_BASE: https://litellm.stinkyboi.com/v1
-          OPENAI_KEY: ${{ secrets.LITELLM_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          config.model: ${{ env.PR_AGENT_MODEL }}
-          config.custom_model_max_tokens: 200000
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          debug: true
+          review_comment_lgtm: false
+          openai_heavy_model: gpt-4
+          path_filters: |
+            !dist/**
+            !**/*.lock
