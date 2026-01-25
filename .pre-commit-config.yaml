@@ -11,7 +11,7 @@ repos:
       - id: check-added-large-files
       - id: sort-simple-yaml
   - repo: https://github.com/bridgecrewio/checkov.git
-    rev: 3.2.499  # change to tag or sha
+    rev: 3.2.499 # change to tag or sha
     hooks:
       - id: checkov
       # - id: checkov_container
