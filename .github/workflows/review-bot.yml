@@ -1,13 +1,11 @@
+---
 name: PR Agent
-
 on:
   pull_request:
-
 permissions:
   issues: write
   pull-requests: write
   contents: read
-
 jobs:
   pr_agent_job:
     if: ${{ github.event.sender.type != 'Bot' }}
@@ -20,14 +18,13 @@ jobs:
       contents: read
     steps:
       - name: Tailscale
-        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4
+        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9  # v4
         with:
           authkey: ${{ secrets.TS_AUTH_KEY }}
           tags: tag:ci
           statedir: /tmp/tailscale-state/
-
       - name: Review Bot
-        uses: Stuhlmuller/ai-pr-reviewer@0365077c9ba8788b44164426bda80f9e43ec2939 # v1
+        uses: Stuhlmuller/ai-pr-reviewer@0365077c9ba8788b44164426bda80f9e43ec2939  # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -35,6 +32,6 @@ jobs:
           debug: true
           review_comment_lgtm: false
           openai_heavy_model: gpt-4
-          path_filters: |
+          path_filters: |-
             !dist/**
             !**/*.lock
