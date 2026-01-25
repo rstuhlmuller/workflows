@@ -19,3 +19,9 @@ repos:
       # - id: checkov_diff_container
       - id: checkov_secrets
       # - id: checkov_secrets_container
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    # Zizmor version.
+    rev: v1.22.0
+    hooks:
+      # Run the linter.
+      - id: zizmor
