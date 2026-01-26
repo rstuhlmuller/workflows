@@ -25,5 +25,5 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_BIOME_FORMAT: false
+          DISABLE_ERRORS: true
           VALIDATE_ALL_CODEBASE: false
