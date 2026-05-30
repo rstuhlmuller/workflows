@@ -4,7 +4,7 @@ on: # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       checkov:
-        description: Run Checkov before the merge gatekeeper.
+        description: Deprecated. Use checkov.yml directly when needed.
         default: true
         required: false
         type: boolean
@@ -20,30 +20,6 @@ permissions:
   contents: read
 
 jobs:
-  checkov:
-    if: ${{ inputs.checkov }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          persist-credentials: false
-
-      - name: Checkov
-        uses: bridgecrewio/checkov-action@8f61ce5b8a3afb4ca94d236b75201878ded6d2cd # v12.3077.0
-        with:
-          quiet: true
-          output_format: cli,sarif
-          output_file_path: results.sarif
-
-      - name: Upload SARIF
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
-        with:
-          sarif_file: results.sarif
-
   merge-checks:
     runs-on: ubuntu-latest
     permissions:
