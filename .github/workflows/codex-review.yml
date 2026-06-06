@@ -1,0 +1,282 @@
+---
+name: Codex Review
+
+on: # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      allow_bot_users:
+        description: Comma-separated trusted bot users allowed to run Codex.
+        default: ""
+        required: false
+        type: string
+      allow_bots:
+        description: Allow trusted bot accounts to bypass the write-access check.
+        default: false
+        required: false
+        type: boolean
+      allow_users:
+        description: Comma-separated GitHub users allowed to run Codex.
+        default: ""
+        required: false
+        type: string
+      codex_args:
+        description: Extra arguments forwarded to codex exec.
+        default: ""
+        required: false
+        type: string
+      codex_version:
+        description: Version of @openai/codex to install.
+        default: ""
+        required: false
+        type: string
+      approve_pr:
+        description: Submit an approving PR review when Codex approves.
+        default: true
+        required: false
+        type: boolean
+      cache_codex_cli:
+        description: Cache npm data used by openai/codex-action installs.
+        default: true
+        required: false
+        type: boolean
+      cache_version:
+        description: Cache namespace version for manual cache busting.
+        default: v1
+        required: false
+        type: string
+      effort:
+        description: Reasoning effort for Codex.
+        default: ""
+        required: false
+        type: string
+      model:
+        description: Model for Codex.
+        default: ""
+        required: false
+        type: string
+      prompt:
+        description: Prompt sent to Codex before repository context.
+        default: |-
+          Review the current pull request for bugs, security issues, regressions,
+          and missing tests. Focus only on changes introduced by the pull request.
+          Set approved to true only when there are no actionable issues.
+          Do not modify files.
+        required: false
+        type: string
+      responses_api_endpoint:
+        description: Optional Responses API endpoint override.
+        default: ""
+        required: false
+        type: string
+      safety_strategy:
+        description: Safety strategy passed to openai/codex-action.
+        default: drop-sudo
+        required: false
+        type: string
+      sandbox:
+        description: Sandbox mode passed to Codex.
+        default: read-only
+        required: false
+        type: string
+      working_directory:
+        description: Directory passed to codex exec --cd.
+        default: ""
+        required: false
+        type: string
+    secrets:
+      CODEX_APPROVAL_TOKEN:
+        description: Optional GitHub token used to submit the PR review.
+        required: false
+      OPENAI_API_KEY:
+        description: OpenAI or compatible Responses API key.
+        required: false
+    outputs:
+      final_message:
+        description: Final message returned by Codex.
+        value: ${{ jobs.codex.outputs.final_message }}
+
+permissions: {}
+
+jobs:
+  codex:
+    name: Codex Review
+    runs-on: ubuntu-latest
+    outputs:
+      final_message: ${{ steps.run_codex.outputs.final-message }}
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      HAS_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+    steps:
+      - name: Skip when OpenAI is unavailable
+        if: ${{ env.HAS_OPENAI_API_KEY != 'true' }}
+        run: echo "OPENAI_API_KEY is not configured for this repository; skipping Codex Review."
+
+      - name: Checkout pull request merge
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' && github.event_name == 'pull_request' }}
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Checkout ref
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' && github.event_name != 'pull_request' }}
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Pre-fetch base and head refs for the PR
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' && github.event_name == 'pull_request' }}
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch --no-tags origin \
+            "$PR_BASE_REF" \
+            "+refs/pull/$PR_NUMBER/head"
+
+      - name: Configure Codex npm cache
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' && inputs.cache_codex_cli }}
+        run: |
+          npm_cache="${RUNNER_TEMP}/codex-npm-cache"
+          npm_prefix="${RUNNER_TEMP}/codex-npm-global"
+          mkdir -p "${npm_cache}" "${npm_prefix}/bin"
+          echo "NPM_CONFIG_CACHE=${npm_cache}" >>"${GITHUB_ENV}"
+          echo "NPM_CONFIG_PREFIX=${npm_prefix}" >>"${GITHUB_ENV}"
+          echo "${npm_prefix}/bin" >>"${GITHUB_PATH}"
+
+      - name: Restore Codex npm cache
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' && inputs.cache_codex_cli }}
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ${{ runner.temp }}/codex-npm-cache
+            ${{ runner.temp }}/codex-npm-global
+          key: codex-npm-${{ runner.os }}-${{ runner.arch }}-${{ inputs.codex_version || 'latest' }}-${{ inputs.cache_version }}
+          restore-keys: |
+            codex-npm-${{ runner.os }}-${{ runner.arch }}-${{ inputs.codex_version || 'latest' }}-
+            codex-npm-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Run Codex
+        id: run_codex
+        if: ${{ env.HAS_OPENAI_API_KEY == 'true' }}
+        uses: openai/codex-action@e0fdf01220eb9a88167c4898839d273e3f2609d1 # v1.8
+        with:
+          allow-bot-users: ${{ inputs.allow_bot_users }}
+          allow-bots: ${{ inputs.allow_bots }}
+          allow-users: ${{ inputs.allow_users }}
+          codex-args: ${{ inputs.codex_args }}
+          codex-version: ${{ inputs.codex_version }}
+          effort: ${{ inputs.effort }}
+          model: ${{ inputs.model }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt: |
+            ${{ inputs.prompt }}
+
+            Return approved=false if you find any actionable bugs, security
+            issues, regressions, or missing tests. Return approved=true only
+            when the pull request is safe to approve.
+
+            Context:
+            - Repository: ${{ github.repository }}
+            - Event: ${{ github.event_name }}
+            - Pull request: #${{ github.event.pull_request.number }}
+            - Base SHA: ${{ github.event.pull_request.base.sha }}
+            - Head SHA: ${{ github.event.pull_request.head.sha }}
+
+            Useful review commands:
+            - git log --oneline ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+            - git diff --stat ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+            - git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+          output-schema: |
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["approved", "summary", "findings"],
+              "properties": {
+                "approved": {
+                  "type": "boolean",
+                  "description": "True only when there are no actionable review findings."
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Concise review summary suitable for a pull request review body."
+                },
+                "findings": {
+                  "type": "array",
+                  "description": "Actionable issues that should prevent approval.",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["severity", "file", "line", "message"],
+                    "properties": {
+                      "severity": {
+                        "type": "string",
+                        "enum": ["critical", "high", "medium", "low"]
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": ["integer", "null"]
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          responses-api-endpoint: ${{ inputs.responses_api_endpoint }}
+          safety-strategy: ${{ inputs.safety_strategy }}
+          sandbox: ${{ inputs.sandbox }}
+          working-directory: ${{ inputs.working_directory }}
+
+  submit-review:
+    name: Submit Codex Review
+    needs:
+      - codex
+    if: ${{ inputs.approve_pr && github.event_name == 'pull_request' && needs.codex.outputs.final_message != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Submit pull request review
+        env:
+          CODEX_FINAL_MESSAGE: ${{ needs.codex.outputs.final_message }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.CODEX_APPROVAL_TOKEN || github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          review_json="${RUNNER_TEMP}/codex-review.json"
+          review_body="${RUNNER_TEMP}/codex-review.md"
+          printf "%s\n" "${CODEX_FINAL_MESSAGE}" >"${review_json}"
+
+          approved="$(jq -r '.approved // false' "${review_json}")"
+
+          {
+            jq -r '.summary // "Codex completed review."' "${review_json}"
+            echo
+            jq -r '
+              if (.findings | length) == 0 then
+                "No actionable findings."
+              else
+                "Findings:"
+              end
+            ' "${review_json}"
+            jq -r '
+              .findings[]? |
+              "- [" + .severity + "] " + .message +
+              (if .file != "" then " (" + .file + (if .line == null then "" else ":" + (.line | tostring) end) + ")" else "" end)
+            ' "${review_json}"
+          } >"${review_body}"
+
+          if [ "${approved}" = "true" ]; then
+            gh pr review "${PR_NUMBER}" --approve --body-file "${review_body}" --repo "${GH_REPO}"
+          else
+            gh pr review "${PR_NUMBER}" --comment --body-file "${review_body}" --repo "${GH_REPO}"
+          fi
