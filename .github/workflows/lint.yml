@@ -33,4 +33,5 @@ jobs:
           DISABLE_ERRORS: true
           DEFAULT_BRANCH: ${{ github.event.pull_request.base.ref }}
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          SAVE_SUPER_LINTER_SUMMARY: true
           VALIDATE_ALL_CODEBASE: false
